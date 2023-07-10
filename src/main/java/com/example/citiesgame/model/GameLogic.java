@@ -3,8 +3,16 @@ package com.example.citiesgame.model;
 import com.example.citiesgame.gui.GameGUI;
 import com.example.citiesgame.util.CityFileReader;
 
-import javax.swing.*;
 import java.util.*;
+import javax.swing.JOptionPane;
+
+
+import com.example.citiesgame.gui.GameGUI;
+import com.example.citiesgame.util.CityFileReader;
+
+import java.util.*;
+import javax.swing.JOptionPane;
+
 
 public class GameLogic {
     private GameGUI gameGUI;
@@ -13,6 +21,7 @@ public class GameLogic {
     private int userScore = 0;
     private int computerScore = 0;
     private Random random;
+    private String lastComputerCity = "";
 
     public GameLogic(GameGUI gameGUI) {
         this.gameGUI = gameGUI;
@@ -39,7 +48,6 @@ public class GameLogic {
             System.exit(0);
         }
 
-
         if (usedCities.contains(userInputInLowerCase)) {
             JOptionPane.showMessageDialog(null, "Це місто вже використано. Введіть інше місто.");
             return;
@@ -50,18 +58,21 @@ public class GameLogic {
             return;
         }
 
+        String adjustedUserInput = adjustCityName(userInputInLowerCase);
+
+        if (!checkFirstLetter(adjustedUserInput)) {
+            JOptionPane.showMessageDialog(null, "Перша літера введеного міста не відповідає останній літері міста, яке назвав комп'ютер. Спробуйте ще раз.");
+            return;
+        }
 
         usedCities.add(userInputInLowerCase);
-        userScore++;
 
-        String computerMove = findNextCity(userInputInLowerCase);
+        String computerMove = findNextCity(adjustedUserInput);
         if (computerMove == null) {
             JOptionPane.showMessageDialog(null, "Ком'ютер не може знайти місто для вас. Ви перемогли!");
-            userScore--;
+            userScore++;
             gameGUI.updateScoreLabel(userScore, computerScore);
             System.exit(0);
-        } else if (Character.toLowerCase(computerMove.charAt(0)) != userInputInLowerCase.charAt(userInputInLowerCase.length() - 1)) {
-            JOptionPane.showMessageDialog(null, "Ви повинні ввести місто, яке починається на літеру '" + userInputInLowerCase.charAt(userInputInLowerCase.length() - 1) + "'. Спробуйте ще раз.");
             return;
         }
 
@@ -71,7 +82,17 @@ public class GameLogic {
         computerScore++;
         gameGUI.updateScoreLabel(userScore, computerScore);
         gameGUI.appendConversation(userInput, capitalizeFirstLetter(computerMove));
+        lastComputerCity = computerMove.toLowerCase().replaceAll("[ьиЬИйЙ]","").trim();
+    }
 
+    private boolean checkFirstLetter(String city) {
+        if (lastComputerCity.isEmpty()) {
+            return true; // Якщо комп'ютер ще не назвав жодного міста, перевірка не потрібна
+        }
+
+        char firstChar = city.charAt(0);
+        char lastChar = lastComputerCity.charAt(lastComputerCity.length() - 1);
+        return Character.toLowerCase(firstChar) == lastChar;
     }
 
     private String findNextCity(String previousCity) {
@@ -96,7 +117,6 @@ public class GameLogic {
                 return city;
             }
         }
-
         return null;
     }
 
@@ -110,6 +130,12 @@ public class GameLogic {
         }
         return input.substring(0, 1).toUpperCase() + input.substring(1);
     }
+
+    private String adjustCityName(String cityName) {
+        return cityName.replaceAll("[ьиЬИйЙ]", "").trim();
+    }
 }
+
+
 
 
